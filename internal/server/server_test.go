@@ -52,7 +52,7 @@ var _ = Describe("Server routing", func() {
 		db = _db
 		jwtKey := []byte(env.JwtKey)
 
-		router = server.SetupServer(db, jwtKey, env.BaseUrl.Path, env.BaseUrl.Host)
+		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), env.BaseUrl.Host)
 	})
 
 	Context("Sign up with local account", func() {
