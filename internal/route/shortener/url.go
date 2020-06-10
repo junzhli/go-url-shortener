@@ -96,7 +96,9 @@ func CreateShortenUrlHandler(context *gin.Context) {
 				return
 			}
 
-			context.String(http.StatusOK, shorten)
+			context.JSON(http.StatusOK, gin.H{
+				"url": shorten,
+			})
 			return
 		}
 
