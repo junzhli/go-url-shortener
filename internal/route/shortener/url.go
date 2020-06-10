@@ -105,7 +105,9 @@ func CreateShortenUrlHandler(context *gin.Context) {
 		return
 	}
 
-	context.String(http.StatusOK, url.ShortenURL)
+	context.JSON(http.StatusOK, gin.H{
+		"url": url.ShortenURL,
+	})
 }
 
 // seed1 is from bigInteger in range of 0 to given value, seed2 is from time stamp in the form of seconds
