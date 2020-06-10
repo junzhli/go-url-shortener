@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
 	"url-shortener/internal/server"
@@ -33,7 +34,7 @@ func main() {
 	*/
 	jwtKey := []byte(env.JwtKey)
 
-	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), env.BaseUrl.Host) // blocking if starting with success
+	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0]) // blocking if starting with success
 	log.Printf("Server is listening...")
 	port := fmt.Sprintf(":%v", env.Port)
 	if err := r.Run(port); err != nil {
