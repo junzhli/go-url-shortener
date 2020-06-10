@@ -5,6 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
+	"time"
 )
 
 type MySQLService interface {
@@ -24,24 +25,24 @@ type MySQLService interface {
  * Gorm* representing implementation of MySQLService.
  */
 type gormUser struct {
-	gorm.Model
-	UserID   string `gorm:"primary_key"`
-	Email    string
-	Type     string
-	Password string
+	UserID    string `gorm:"primary_key"`
+	Email     string
+	Type      string
+	Password  string
+	UpdatedAt time.Time
 }
 
 type gormGoogleUser struct {
-	gorm.Model
 	UserID     string
 	GoogleUUID string `gorm:"primary_key"`
+	UpdatedAt  time.Time
 }
 
 type gormURL struct {
-	gorm.Model
 	OriginURL  string
 	Owner      string
 	ShortenURL string `gorm:"primary_key"`
+	UpdatedAt  time.Time
 }
 
 type gormService struct {
@@ -79,10 +80,11 @@ func (g *gormService) Init() {
 
 func (g *gormService) CreateUser(user User) error {
 	u := gormUser{
-		UserID:   user.UserID,
-		Email:    user.Email,
-		Type:     user.Type,
-		Password: user.Password,
+		UserID:    user.UserID,
+		Email:     user.Email,
+		Type:      user.Type,
+		Password:  user.Password,
+		UpdatedAt: time.Now(),
 	}
 	if err := g.db.Create(&u).Error; err != nil {
 		log.Printf("Unable to create user in table")
@@ -97,6 +99,7 @@ func (g *gormService) CreateGoogleUser(user User, gUser GoogleUser) error {
 		g := gormGoogleUser{
 			UserID:     gUser.UserID,
 			GoogleUUID: gUser.GoogleUUID,
+			UpdatedAt:  time.Now(),
 		}
 		if err := tx.Create(&g).Error; err != nil {
 			log.Printf("Unable to create google user in table")
@@ -171,6 +174,7 @@ func (g *gormService) CreateURL(oriURL string, shortenURL string, user User) err
 		OriginURL:  oriURL,
 		Owner:      user.UserID,
 		ShortenURL: shortenURL,
+		UpdatedAt:  time.Now(),
 	}
 	if err := g.db.Create(&u).Error; err != nil {
 		log.Printf("Unable to create url in table")

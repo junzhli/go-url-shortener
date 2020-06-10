@@ -74,9 +74,7 @@ var _ = Describe("GormService (default impl of MySQLService)", func() {
 
 		Context("From Google account", func() {
 			It("should create user successfully", func() {
-				err := db.CreateUser(user2)
-				Expect(err).NotTo(HaveOccurred())
-				err = db.CreateGoogleUser(user2, googleUser2)
+				err := db.CreateGoogleUser(user2, googleUser2)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
