@@ -70,11 +70,11 @@ func GoogleSignCallbackHandler(jwtKey []byte) gin.HandlerFunc {
 					context.AbortWithStatus(http.StatusInternalServerError)
 					return
 				}
+			} else {
+				fmt.Printf("Unable to check whether user is registered | Reason: %v\n", err)
+				context.AbortWithStatus(http.StatusInternalServerError)
+				return
 			}
-
-			fmt.Printf("Unable to check whether user is registered | Reason: %v", err)
-			context.AbortWithStatus(http.StatusInternalServerError)
-			return
 		}
 		log.Printf("User has registered\n")
 
