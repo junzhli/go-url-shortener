@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"path"
 	"time"
 	"url-shortener/internal/database"
 	"url-shortener/internal/middleware"
@@ -13,8 +14,10 @@ import (
 )
 
 // Start server, return error if failed to start.
-func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain string) *gin.Engine {
+func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain string, htmlTemplate string) *gin.Engine {
 	r := gin.Default()
+
+	r.LoadHTMLGlob(path.Join(htmlTemplate, "*.tmpl"))
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{baseUrl},
@@ -30,6 +33,8 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 	{
 		userRouter := apiRouter.Group("/user")
 		{
+			userRouter.GET("/authCheck", middleware.UserAuthenticated(jwtKey), sign.AuthCheckHandler)
+
 			signRouter := userRouter.Group("/sign")
 			{
 				redirectUrl := fmt.Sprintf("%v/api/user/sign/google/callback", baseUrl)

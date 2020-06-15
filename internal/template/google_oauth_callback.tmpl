@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Please wait...</title>
+</head>
+<script>
+function receiveMessage(event)
+{
+  if (event.origin !== "http://url-shortener.com")
+    return;
+
+  if (event.data === "closeWindow") {
+    window.close();
+  }
+
+  event.source.postMessage({accessToken: {{.token}}},
+                           event.origin);
+
+}
+
+window.addEventListener("message", receiveMessage, false);
+</script>
+<body>
+
+</body>
+</html>

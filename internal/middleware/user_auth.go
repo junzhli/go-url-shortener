@@ -7,31 +7,35 @@ import (
 	"log"
 	"net/http"
 	"url-shortener/internal/database"
+	server "url-shortener/internal/route/error"
 )
 
 func UserAuthenticated(jwtKey []byte) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		jwtToken, err := context.Cookie("accessToken")
 		if err != nil {
-			fmt.Println("No accessToken found on cookie header")
-			context.String(http.StatusUnauthorized, "User not logged in")
-			context.Abort()
+			log.Println("No accessToken found on cookie header")
+			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
 			return
 		}
 
 		token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", jwtToken)
+				return nil, fmt.Errorf("unexpected signing method: %v\n", jwtToken)
 			}
 
 			return jwtKey, nil
 		})
+		if err != nil {
+			log.Printf("token validation failed\n")
+			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
+			return
+		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
-			log.Printf("claims validation failed")
-			context.String(http.StatusUnauthorized, "invalid accessToken")
-			context.Abort()
+			log.Printf("claims validation failed\n")
+			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
 			return
 		}
 
@@ -39,12 +43,11 @@ func UserAuthenticated(jwtKey []byte) gin.HandlerFunc {
 		user, err := db.GetUserWithEmail(claims["email"].(string))
 		if err != nil {
 			if _, ok := err.(database.RecordNotFoundError); ok {
-				log.Printf("given email not found in database")
-				context.String(http.StatusUnauthorized, "invalid accessToken")
-				context.Abort()
+				log.Printf("given email not found in database\n")
+				context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
 				return
 			}
-			log.Printf("Unable to query for given email in database")
+			log.Printf("Unable to query for given email in database\n")
 			context.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

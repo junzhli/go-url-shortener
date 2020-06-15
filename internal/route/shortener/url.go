@@ -36,7 +36,7 @@ func GetShortenUrlHandler(context *gin.Context) {
 		return
 	}
 
-	context.String(http.StatusOK, url.OriginURL)
+	context.Redirect(http.StatusMovedPermanently, url.OriginURL)
 }
 
 func CreateShortenUrlHandler(context *gin.Context) {

@@ -85,9 +85,8 @@ func GoogleSignCallbackHandler(jwtKey []byte) gin.HandlerFunc {
 		})
 		issuedToken, err := unsignedToken.SignedString(jwtKey)
 
-		// TODO: redirect
-		context.JSON(http.StatusOK, gin.H{
-			"issueToken": issuedToken,
+		context.HTML(http.StatusOK, "google_oauth_callback.tmpl", gin.H{
+			"token": issuedToken,
 		})
 	}
 }

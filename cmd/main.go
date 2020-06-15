@@ -34,7 +34,7 @@ func main() {
 	*/
 	jwtKey := []byte(env.JwtKey)
 
-	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0]) // blocking if starting with success
+	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template") // blocking if starting with success
 	log.Printf("Server is listening...")
 	port := fmt.Sprintf(":%v", env.Port)
 	if err := r.Run(port); err != nil {

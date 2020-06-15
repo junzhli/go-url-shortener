@@ -61,7 +61,7 @@ var _ = Describe("Server APIs", func() {
 		db = _db
 		jwtKey := []byte(env.JwtKey)
 
-		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0])
+		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template")
 	})
 
 	Context("Sign up with local account", func() {
@@ -130,7 +130,18 @@ var _ = Describe("Server APIs", func() {
 			req := httptest.NewRequest("POST", "/api/user/sign/", strings.NewReader(payload))
 			router.ServeHTTP(recorder, req)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
-			user1AccessTokenHeader = recorder.Header().Get("Set-Cookie")
+
+			bodyReader := recorder.Body
+			body, err := ioutil.ReadAll(bodyReader)
+			Expect(err).ShouldNot(HaveOccurred())
+			var response map[string]interface{}
+			err = json.Unmarshal(body, &response)
+			Expect(err).ShouldNot(HaveOccurred())
+			accessToken, ok := response["issueToken"]
+			Expect(ok).To(Equal(true))
+			accessTokenStr, ok := accessToken.(string)
+			Expect(ok).To(Equal(true))
+			user1AccessTokenHeader = fmt.Sprintf("accessToken=%v", accessTokenStr)
 		})
 
 		It("should reject due to field problem", func() {
@@ -216,23 +227,9 @@ var _ = Describe("Server APIs", func() {
 			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", fmt.Sprintf("/api/shortener/r/%v", user1ShortenUrl), nil)
 			router.ServeHTTP(recorder, req)
-			Expect(recorder.Code).To(Equal(http.StatusOK))
-		})
-
-		It("should reject due to invalid request", func() {
-			recorder := httptest.NewRecorder()
-			req := httptest.NewRequest("GET", "/api/shortener/r/12345678", nil)
-			router.ServeHTTP(recorder, req)
-			Expect(recorder.Code).To(Equal(http.StatusNotFound))
-		})
-	})
-
-	Context("Resolve a shorten url", func() {
-		It("should perform successfully", func() {
-			recorder := httptest.NewRecorder()
-			req := httptest.NewRequest("GET", fmt.Sprintf("/api/shortener/r/%v", user1ShortenUrl), nil)
-			router.ServeHTTP(recorder, req)
-			Expect(recorder.Code).To(Equal(http.StatusOK))
+			Expect(recorder.Code).To(Equal(http.StatusMovedPermanently))
+			redirectUrl := recorder.Header().Get("Location")
+			Expect(redirectUrl).To(Equal(user1Url))
 		})
 
 		It("should reject due to invalid request", func() {
@@ -287,6 +284,24 @@ var _ = Describe("Server APIs", func() {
 			req.Header.Set("Cookie", user1AccessTokenHeader)
 			router.ServeHTTP(recorder, req)
 			Expect(recorder.Code).To(Equal(http.StatusNotFound))
+		})
+	})
+
+	Context("Authenticate user", func() {
+		It("should reject due to authorized problem", func() {
+			recorder := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/api/user/authCheck", nil)
+			req.Header.Set("Cookie", "accessToken=123456")
+			router.ServeHTTP(recorder, req)
+			Expect(recorder.Code).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("should perform successfully", func() {
+			recorder := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", "/api/user/authCheck", nil)
+			req.Header.Set("Cookie", user1AccessTokenHeader)
+			router.ServeHTTP(recorder, req)
+			Expect(recorder.Code).To(Equal(http.StatusOK))
 		})
 	})
 

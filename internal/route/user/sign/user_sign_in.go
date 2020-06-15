@@ -76,9 +76,6 @@ func UserSignInHandler(jwtKey []byte) gin.HandlerFunc {
 		})
 		issuedToken, err := unsignedToken.SignedString(jwtKey)
 
-		// TODO: remove it
-		context.SetCookie("accessToken", issuedToken, time.Now().Add(24*time.Hour).Second(), "/", domain, false, true)
-
 		context.JSON(http.StatusOK, gin.H{
 			"issueToken": issuedToken,
 		})
