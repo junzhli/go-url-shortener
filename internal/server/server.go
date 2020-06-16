@@ -21,7 +21,7 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{baseUrl},
-		AllowMethods:     []string{"GET", "POST"},
+		AllowMethods:     []string{"GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin"},
 		AllowCredentials: true,
 		ExposeHeaders:    []string{"Content-Length"},
@@ -42,9 +42,8 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 
 				googleOauth := signRouter.Group("/google")
 				{
-
 					googleOauth.GET("/", sign.GoogleSignHandler)
-					googleOauth.GET("/callback", sign.GoogleSignCallbackHandler(jwtKey))
+					googleOauth.GET("/callback", sign.GoogleSignCallbackHandler(jwtKey, baseUrl))
 				}
 
 				signRouter.POST("/", sign.UserSignInHandler(jwtKey))

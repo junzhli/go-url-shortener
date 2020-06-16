@@ -24,7 +24,7 @@ func GoogleSignHandler(context *gin.Context) {
 	context.Redirect(http.StatusFound, url)
 }
 
-func GoogleSignCallbackHandler(jwtKey []byte) gin.HandlerFunc {
+func GoogleSignCallbackHandler(jwtKey []byte, baseUrl string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		oauthState, err := context.Cookie("oauthstate")
 		if err != nil {
@@ -86,7 +86,8 @@ func GoogleSignCallbackHandler(jwtKey []byte) gin.HandlerFunc {
 		issuedToken, err := unsignedToken.SignedString(jwtKey)
 
 		context.HTML(http.StatusOK, "google_oauth_callback.tmpl", gin.H{
-			"token": issuedToken,
+			"token":   issuedToken,
+			"baseUrl": baseUrl,
 		})
 	}
 }
@@ -146,7 +147,7 @@ func extractUserInfoFromGoogleToken(code string) (*googleOauthUserInfo, error) {
 }
 
 func generateStateOauthCookie(context *gin.Context) string {
-	expiration := time.Now().Add(365 * 24 * time.Hour).Second()
+	expiration := time.Now().Add(10 * time.Minute).Second()
 	random := make([]byte, 16)
 	rand.Read(random)
 	state := base64.URLEncoding.EncodeToString(random)
