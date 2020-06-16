@@ -49,8 +49,8 @@ type gormService struct {
 	db *gorm.DB
 }
 
-func newGormSerice(user string, password string, host string, port string) (*gormService, error) {
-	db, err := gorm.Open("mysql", fmt.Sprintf("%v:%v@(%v:%v)/url_shortener?charset=utf8&parseTime=True&loc=Local", user, password, host, port))
+func newGormSerice(user string, password string, host string, port string, dbName string, dbParams string) (*gormService, error) {
+	db, err := gorm.Open("mysql", fmt.Sprintf("%v:%v@(%v:%v)/%v?%v", user, password, host, port, dbName, dbParams))
 	if err != nil {
 		log.Printf("Unable to init database connection %v", err)
 		return nil, err
@@ -264,6 +264,8 @@ type Config struct {
 	Password string
 	Host     string
 	Port     string
+	DBName   string
+	DBParams string
 }
 
 // NewMySQLDatabase returns MySQLService.
@@ -273,6 +275,9 @@ func NewMySQLDatabase(c Config) (MySQLService, error) {
 	var pass string
 	var host string
 	var port string
+	var dbName string
+	var dbParams string
+
 	if c.Username == "" {
 		user = "root"
 	} else {
@@ -293,7 +298,19 @@ func NewMySQLDatabase(c Config) (MySQLService, error) {
 		port = c.Port
 	}
 
-	g, err := newGormSerice(user, pass, host, port)
+	if c.DBName == "" {
+		dbName = "url_shortener"
+	} else {
+		dbName = c.DBName
+	}
+
+	if c.DBParams == "" {
+		dbParams = "charset=utf8&parseTime=True&loc=Local"
+	} else {
+		dbParams = c.DBParams
+	}
+
+	g, err := newGormSerice(user, pass, host, port, dbName, dbParams)
 	if err != nil {
 		log.Printf("Unable to create an instance of Gorm")
 		return nil, err

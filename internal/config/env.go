@@ -10,13 +10,15 @@ import (
 )
 
 type Env struct {
-	DBUser  string
-	DBPass  string
-	DBHost  string
-	DBPort  string
-	JwtKey  string
-	BaseUrl *url2.URL
-	Port    string
+	DBUser   string
+	DBPass   string
+	DBHost   string
+	DBPort   string
+	DBName   string
+	DBParams string
+	JwtKey   string
+	BaseUrl  *url2.URL
+	Port     string
 }
 
 func ReadEnv() Env {
@@ -42,10 +44,22 @@ func ReadEnv() Env {
 		dbHost = "localhost"
 	}
 
-	dbPort := os.Getenv("DB_Port")
+	dbPort := os.Getenv("DB_PORT")
 	if dbPort == "" {
 		log.Printf("DB_PORT is empty. Default as \"3306\"\n")
 		dbPort = "3306"
+	}
+
+	dbName := os.Getenv("DB_NAME")
+	if dbName == "" {
+		log.Printf("DB_NAME is empty. Default as \"url_shortener\"\n")
+		dbName = "url_shortener"
+	}
+
+	dbParams := os.Getenv("DB_PARAMS")
+	if dbParams == "" {
+		log.Printf("DB_PARAMS is empty. Default as \"charset=utf8&parseTime=True&loc=Local\"\n")
+		dbParams = "charset=utf8&parseTime=True&loc=Local"
 	}
 
 	jwtKey := os.Getenv("JWT_KEY")
@@ -75,13 +89,15 @@ func ReadEnv() Env {
 	}
 
 	env := Env{
-		DBUser:  dbUser,
-		DBPass:  dbPass,
-		DBHost:  dbHost,
-		DBPort:  dbPort,
-		JwtKey:  jwtKey,
-		BaseUrl: u,
-		Port:    port,
+		DBUser:   dbUser,
+		DBPass:   dbPass,
+		DBHost:   dbHost,
+		DBPort:   dbPort,
+		DBName:   dbName,
+		DBParams: dbParams,
+		JwtKey:   jwtKey,
+		BaseUrl:  u,
+		Port:     port,
 	}
 
 	fmt.Printf("===========================\n")
