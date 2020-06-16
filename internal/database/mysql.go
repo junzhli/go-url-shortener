@@ -50,7 +50,9 @@ type gormService struct {
 }
 
 func newGormSerice(user string, password string, host string, port string, dbName string, dbParams string) (*gormService, error) {
-	db, err := gorm.Open("mysql", fmt.Sprintf("%v:%v@(%v:%v)/%v?%v", user, password, host, port, dbName, dbParams))
+	connectStr := fmt.Sprintf("%v:%v@(%v:%v)/%v?%v", user, password, host, port, dbName, dbParams)
+	log.Printf("mysql str: %v\n", connectStr)
+	db, err := gorm.Open("mysql", connectStr)
 	if err != nil {
 		log.Printf("Unable to init database connection %v", err)
 		return nil, err
