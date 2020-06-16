@@ -23,6 +23,8 @@ func main() {
 		Password: env.DBPass,
 		Host:     env.DBHost,
 		Port:     env.DBPort,
+		DBName:   env.DBName,
+		DBParams: env.DBParams,
 	}
 	db, err := database.NewMySQLDatabase(dbConfig)
 	if err != nil {
