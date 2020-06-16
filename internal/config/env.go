@@ -68,9 +68,9 @@ func ReadEnv() Env {
 		jwtKey = "testKey"
 	}
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("API_PORT")
 	if port == "" {
-		log.Printf("PORT is empty. Default as \"8080\"\n")
+		log.Printf("API_PORT is empty. Default as \"8080\"\n")
 		port = "8080"
 	}
 
