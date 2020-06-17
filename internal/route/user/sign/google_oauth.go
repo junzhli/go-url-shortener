@@ -41,7 +41,7 @@ func GoogleSignCallbackHandler(jwtKey []byte, baseUrl string) gin.HandlerFunc {
 		userOauthInfo, err := extractUserInfoFromGoogleToken(context.Query("code"))
 		if err != nil {
 			log.Printf("Unable to extract user info with code: %v | Reason: %v\n", context.Query("code"), err)
-			context.AbortWithStatus(http.StatusInternalServerError)
+			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 			return
 		}
 

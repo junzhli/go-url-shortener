@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"time"
 	"url-shortener/internal/database"
 	server "url-shortener/internal/route/error"
 )
@@ -35,6 +36,13 @@ func UserAuthenticated(jwtKey []byte) gin.HandlerFunc {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
 			log.Printf("claims validation failed\n")
+			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
+			return
+		}
+
+		elapsed := time.Since(time.Unix(int64((claims["issued"]).(float64)), 0)).Seconds()
+		if elapsed > 86400*7 { // expire after 7 days
+			log.Printf("access token expired\n")
 			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
 			return
 		}
