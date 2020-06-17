@@ -14,9 +14,10 @@ function receiveMessage(event)
     window.close();
   }
 
-  event.source.postMessage({accessToken: {{.token}}},
-                           event.origin);
-
+  if (event.data === "getAccessToken") {
+    parent.postMessage({accessToken: {{.token}}},
+                               event.origin);
+  }
 }
 
 window.addEventListener("message", receiveMessage, false);
