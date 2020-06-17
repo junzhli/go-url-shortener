@@ -147,10 +147,9 @@ func extractUserInfoFromGoogleToken(code string) (*googleOauthUserInfo, error) {
 }
 
 func generateStateOauthCookie(context *gin.Context) string {
-	expiration := time.Now().Add(10 * time.Minute).Second()
 	random := make([]byte, 16)
 	rand.Read(random)
 	state := base64.URLEncoding.EncodeToString(random)
-	context.SetCookie("oauthstate", state, expiration, "/", domain, false, true)
+	context.SetCookie("oauthstate", state, -1, "/", domain, false, true)
 	return state
 }

@@ -3,7 +3,6 @@ package sign
 import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"log"
 )
 
 var (
@@ -30,7 +29,6 @@ type GoogleOauthConfig struct {
 
 func VarConfig(_domain string, googleConf GoogleOauthConfig) {
 	oauthConf.RedirectURL = googleConf.RedirectUrl
-	log.Printf("domain = %v", _domain)
 	domain = _domain
 	oauthConf.ClientID = googleConf.ClientId
 	oauthConf.ClientSecret = googleConf.ClientSecret
