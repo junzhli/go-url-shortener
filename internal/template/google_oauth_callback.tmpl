@@ -7,6 +7,7 @@
 <script>
 function receiveMessage(event)
 {
+  console.log(event);
   if (event.origin !== {{.baseUrl}})
     return;
 
@@ -15,12 +16,16 @@ function receiveMessage(event)
   }
 
   if (event.data === "getAccessToken") {
-    parent.postMessage({accessToken: {{.token}}},
+    event.source.postMessage({accessToken: {{.token}}},
                                event.origin);
   }
 }
 
 window.addEventListener("message", receiveMessage, false);
+
+window.onload = function() {
+  window.opener.postMessage("callback", {{.baseUrl}});
+}
 </script>
 <body>
 
