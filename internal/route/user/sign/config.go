@@ -8,8 +8,8 @@ import (
 var (
 	// Oauth2 scopes: https://developers.google.com/identity/protocols/oauth2/scopes
 	oauthConf = &oauth2.Config{
-		ClientID:     "959723324236-0e23oe704fp1rtf3k5qc780mijahd1b3.apps.googleusercontent.com",
-		ClientSecret: "xG1-yt61nKfvPUAfZumduCNO",
+		ClientID:     "",
+		ClientSecret: "",
 		Endpoint:     google.Endpoint,
 		RedirectURL:  "",
 		Scopes: []string{
@@ -21,10 +21,15 @@ var (
 	domain = ""
 )
 
-func VarConfig(redirectUrl string, _domain string) {
-	oauthConf.RedirectURL = redirectUrl
+type GoogleOauthConfig struct {
+	ClientId     string
+	ClientSecret string
+	RedirectUrl  string
+}
+
+func VarConfig(_domain string, googleConf GoogleOauthConfig) {
+	oauthConf.RedirectURL = googleConf.RedirectUrl
 	domain = _domain
-	// TODO:
-	//oauthConf.ClientID = clientId
-	//oauthConf.ClientSecret = clientSecret
+	oauthConf.ClientID = googleConf.ClientId
+	oauthConf.ClientSecret = googleConf.ClientSecret
 }

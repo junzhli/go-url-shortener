@@ -10,15 +10,17 @@ import (
 )
 
 type Env struct {
-	DBUser   string
-	DBPass   string
-	DBHost   string
-	DBPort   string
-	DBName   string
-	DBParams string
-	JwtKey   string
-	BaseUrl  *url2.URL
-	Port     string
+	DBUser                  string
+	DBPass                  string
+	DBHost                  string
+	DBPort                  string
+	DBName                  string
+	DBParams                string
+	JwtKey                  string
+	GoogleOauthClientId     string
+	GoogleOauthClientSecret string
+	BaseUrl                 *url2.URL
+	Port                    string
 }
 
 func ReadEnv() Env {
@@ -68,6 +70,18 @@ func ReadEnv() Env {
 		jwtKey = "testKey"
 	}
 
+	googleClientId := os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
+	if googleClientId == "" {
+		log.Printf("GOOGLE_OAUTH_CLIENT_ID is empty. Default as \"959723324236-0e23oe704fp1rtf3k5qc780mijahd1b3.apps.googleusercontent.com\"\n")
+		googleClientId = "959723324236-0e23oe704fp1rtf3k5qc780mijahd1b3.apps.googleusercontent.com"
+	}
+
+	googleClientSecret := os.Getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+	if googleClientSecret == "" {
+		log.Printf("GOOGLE_OAUTH_CLIENT_SECRET is empty. Default as \"xG1-yt61nKfvPUAfZumduCNO\"\n")
+		googleClientSecret = "xG1-yt61nKfvPUAfZumduCNO"
+	}
+
 	port := os.Getenv("API_PORT")
 	if port == "" {
 		log.Printf("API_PORT is empty. Default as \"8080\"\n")
@@ -89,15 +103,17 @@ func ReadEnv() Env {
 	}
 
 	env := Env{
-		DBUser:   dbUser,
-		DBPass:   dbPass,
-		DBHost:   dbHost,
-		DBPort:   dbPort,
-		DBName:   dbName,
-		DBParams: dbParams,
-		JwtKey:   jwtKey,
-		BaseUrl:  u,
-		Port:     port,
+		DBUser:                  dbUser,
+		DBPass:                  dbPass,
+		DBHost:                  dbHost,
+		DBPort:                  dbPort,
+		DBName:                  dbName,
+		DBParams:                dbParams,
+		JwtKey:                  jwtKey,
+		GoogleOauthClientId:     googleClientId,
+		GoogleOauthClientSecret: googleClientSecret,
+		BaseUrl:                 u,
+		Port:                    port,
 	}
 
 	fmt.Printf("===========================\n")

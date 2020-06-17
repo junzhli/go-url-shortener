@@ -6,6 +6,7 @@ import (
 	"strings"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
+	"url-shortener/internal/route/user/sign"
 	"url-shortener/internal/server"
 )
 
@@ -36,7 +37,15 @@ func main() {
 	*/
 	jwtKey := []byte(env.JwtKey)
 
-	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template") // blocking if starting with success
+	/**
+	googleOauth configuration
+	*/
+	gConf := sign.GoogleOauthConfig{
+		ClientId:     env.GoogleOauthClientId,
+		ClientSecret: env.GoogleOauthClientSecret,
+	}
+
+	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template", gConf) // blocking if starting with success
 	log.Printf("Server is listening...")
 	port := fmt.Sprintf(":%v", env.Port)
 	if err := r.Run(port); err != nil {

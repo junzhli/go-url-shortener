@@ -13,6 +13,7 @@ import (
 	"strings"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
+	"url-shortener/internal/route/user/sign"
 	"url-shortener/internal/server"
 )
 
@@ -60,8 +61,12 @@ var _ = Describe("Server APIs", func() {
 		}
 		db = _db
 		jwtKey := []byte(env.JwtKey)
+		gConf := sign.GoogleOauthConfig{
+			ClientId:     env.GoogleOauthClientId,
+			ClientSecret: env.GoogleOauthClientSecret,
+		}
 
-		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template")
+		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template", gConf)
 	})
 
 	Context("Sign up with local account", func() {

@@ -14,7 +14,7 @@ import (
 )
 
 // Start server, return error if failed to start.
-func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain string, htmlTemplate string) *gin.Engine {
+func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain string, htmlTemplate string, gConf sign.GoogleOauthConfig) *gin.Engine {
 	r := gin.Default()
 
 	r.LoadHTMLGlob(path.Join(htmlTemplate, "*.tmpl"))
@@ -37,8 +37,8 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 
 			signRouter := userRouter.Group("/sign")
 			{
-				redirectUrl := fmt.Sprintf("%v/api/user/sign/google/callback", baseUrl)
-				sign.VarConfig(redirectUrl, domain)
+				gConf.RedirectUrl = fmt.Sprintf("%v/api/user/sign/google/callback", baseUrl)
+				sign.VarConfig(domain, gConf)
 
 				googleOauth := signRouter.Group("/google")
 				{
