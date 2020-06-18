@@ -28,7 +28,7 @@ func UserAuthenticated(jwtKey []byte) gin.HandlerFunc {
 			return jwtKey, nil
 		})
 		if err != nil {
-			log.Printf("token validation failed\n")
+			log.Printf("token parsing error occurred | Reason: %v\n", err)
 			context.AbortWithStatusJSON(http.StatusUnauthorized, server.NewResponseErrorWithMessage(server.AuthenticationError))
 			return
 		}
