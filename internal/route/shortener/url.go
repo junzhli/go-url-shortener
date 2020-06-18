@@ -66,7 +66,7 @@ func CreateShortenUrlHandler(domain string) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 			return
 		}
-		u, err := url2.ParseRequestURI(sReq.URL)
+		u, err := url2.Parse(sReq.URL)
 		if err != nil {
 			log.Printf("Invalid url to get shorthand")
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
