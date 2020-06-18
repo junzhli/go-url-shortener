@@ -57,6 +57,7 @@ func newGormSerice(user string, password string, host string, port string, dbNam
 		log.Printf("Unable to init database connection %v", err)
 		return nil, err
 	}
+	db.DB().SetConnMaxLifetime(59 * time.Second)
 
 	return &gormService{
 		db: db,
