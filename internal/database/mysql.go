@@ -54,7 +54,7 @@ func newGormSerice(user string, password string, host string, port string, dbNam
 	log.Printf("mysql str: %v\n", connectStr)
 	db, err := gorm.Open("mysql", connectStr)
 	if err != nil {
-		log.Printf("Unable to init database connection %v", err)
+		log.Printf("Unable to init database connection %v\n", err)
 		return nil, err
 	}
 	db.DB().SetConnMaxLifetime(59 * time.Second)

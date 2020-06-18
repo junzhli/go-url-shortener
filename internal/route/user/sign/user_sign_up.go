@@ -16,7 +16,7 @@ func UserSignUpHandler(context *gin.Context) {
 	body := context.Request.Body
 	r, err := ioutil.ReadAll(body)
 	if err != nil {
-		log.Printf("Unable to read body properly | Reason: %v", err)
+		log.Printf("Unable to read body properly | Reason: %v\n", err)
 		context.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -24,7 +24,7 @@ func UserSignUpHandler(context *gin.Context) {
 	var auth Auth
 	err = json.Unmarshal(r, &auth)
 	if err != nil {
-		log.Printf("Unexpected json string: %v | Reason: %v", string(r), err)
+		log.Printf("Unexpected json string: %v | Reason: %v\n", string(r), err)
 		context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.InvalidJSONStringError))
 		return
 	}

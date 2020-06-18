@@ -57,7 +57,7 @@ var _ = Describe("Server APIs", func() {
 		}
 		_db, err := database.NewMySQLDatabase(dbConfig)
 		if err != nil {
-			log.Fatalf("Unable to set up database | Reason: %v", err)
+			log.Fatalf("Unable to set up database | Reason: %v\n", err)
 		}
 		db = _db
 		jwtKey := []byte(env.JwtKey)
@@ -66,7 +66,7 @@ var _ = Describe("Server APIs", func() {
 			ClientSecret: env.GoogleOauthClientSecret,
 		}
 
-		router = server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template", gConf)
+		router = server.SetupServer(db, jwtKey, env.UseHttps, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template", gConf)
 	})
 
 	Context("Sign up with local account", func() {

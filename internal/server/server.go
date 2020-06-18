@@ -14,7 +14,7 @@ import (
 )
 
 // Start server, return error if failed to start.
-func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain string, htmlTemplate string, gConf sign.GoogleOauthConfig) *gin.Engine {
+func SetupServer(db database.MySQLService, jwtKey []byte, useHttps bool, baseUrl string, domain string, htmlTemplate string, gConf sign.GoogleOauthConfig) *gin.Engine {
 	r := gin.Default()
 
 	r.LoadHTMLGlob(path.Join(htmlTemplate, "*.tmpl"))
@@ -42,7 +42,7 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 
 				googleOauth := signRouter.Group("/google")
 				{
-					googleOauth.GET("/", sign.GoogleSignHandler)
+					googleOauth.GET("/", sign.GoogleSignHandler(useHttps))
 					googleOauth.GET("/callback", sign.GoogleSignCallbackHandler(jwtKey, baseUrl))
 				}
 
@@ -60,7 +60,7 @@ func SetupServer(db database.MySQLService, jwtKey []byte, baseUrl string, domain
 
 		shortenerRouter := apiRouter.Group("/shortener")
 		{
-			shortenerRouter.POST("/", middleware.UserAuthenticated(jwtKey), shortener.CreateShortenUrlHandler)
+			shortenerRouter.POST("/", middleware.UserAuthenticated(jwtKey), shortener.CreateShortenUrlHandler(domain))
 			shortenerRouter.GET("/r/:shorten_url", shortener.GetShortenUrlHandler)
 		}
 	}

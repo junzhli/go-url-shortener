@@ -52,13 +52,13 @@ func UserSignInHandler(jwtKey []byte) gin.HandlerFunc {
 				return
 			}
 
-			log.Printf("Unable to query for user info in database | Reason: %v", err)
+			log.Printf("Unable to query for user info in database | Reason: %v\n", err)
 			context.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
 		if userInfo.Type != "local" {
-			log.Printf("This user doesn't belong to this login type: %v", userInfo.Type)
+			log.Printf("This user doesn't belong to this login type: %v\n", userInfo.Type)
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.AuthenticationError))
 			return
 		}

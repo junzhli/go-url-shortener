@@ -1,7 +1,6 @@
 package shortener
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
@@ -69,7 +68,6 @@ func GetShortenUrlsHandler(context *gin.Context) {
 
 func RemoveShortenUrlHandler(context *gin.Context) {
 	url := context.Param("shorten_url")
-	fmt.Printf("%v", url)
 
 	db := context.Value("db").(database.MySQLService)
 	err := db.DeleteURL(url)

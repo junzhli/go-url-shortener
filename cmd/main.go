@@ -29,7 +29,7 @@ func main() {
 	}
 	db, err := database.NewMySQLDatabase(dbConfig)
 	if err != nil {
-		log.Fatalf("Unable to set up database | Reason: %v", err)
+		log.Fatalf("Unable to set up database | Reason: %v\n", err)
 	}
 
 	/**
@@ -45,10 +45,10 @@ func main() {
 		ClientSecret: env.GoogleOauthClientSecret,
 	}
 
-	r := server.SetupServer(db, jwtKey, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template", gConf) // blocking if starting with success
+	r := server.SetupServer(db, jwtKey, env.UseHttps, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template", gConf) // blocking if starting with success
 	log.Printf("Server is listening...")
 	port := fmt.Sprintf(":%v", env.Port)
 	if err := r.Run(port); err != nil {
-		log.Fatalf("Unable to start server: %v", err)
+		log.Fatalf("Unable to start server: %v\n", err)
 	}
 }

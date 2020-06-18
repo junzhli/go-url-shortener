@@ -21,6 +21,7 @@ type Env struct {
 	GoogleOauthClientSecret string
 	BaseUrl                 *url2.URL
 	Port                    string
+	UseHttps                bool
 }
 
 func ReadEnv() Env {
@@ -98,7 +99,13 @@ func ReadEnv() Env {
 	if err != nil {
 		panic("Invalid baseUrl")
 	}
-	if u.Scheme != "http" && u.Scheme != "https" {
+	var useHttps bool
+	switch u.Scheme {
+	case "http":
+		useHttps = false
+	case "https":
+		useHttps = true
+	default:
 		panic("Invalid baseUrl")
 	}
 
@@ -114,6 +121,7 @@ func ReadEnv() Env {
 		GoogleOauthClientSecret: googleClientSecret,
 		BaseUrl:                 u,
 		Port:                    port,
+		UseHttps:                useHttps,
 	}
 
 	fmt.Printf("===========================\n")

@@ -18,10 +18,12 @@ import (
 	"url-shortener/internal/util"
 )
 
-func GoogleSignHandler(context *gin.Context) {
-	state := generateStateOauthCookie(context)
-	url := oauthConf.AuthCodeURL(state)
-	context.Redirect(http.StatusFound, url)
+func GoogleSignHandler(useHttps bool) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		state := generateStateOauthCookie(context, useHttps)
+		url := oauthConf.AuthCodeURL(state)
+		context.Redirect(http.StatusFound, url)
+	}
 }
 
 func GoogleSignCallbackHandler(jwtKey []byte, baseUrl string) gin.HandlerFunc {
@@ -66,7 +68,7 @@ func GoogleSignCallbackHandler(jwtKey []byte, baseUrl string) gin.HandlerFunc {
 					GoogleUUID: userOauthInfo.Sub,
 				})
 				if err != nil {
-					log.Printf("Error occurred when creating user in database | Reason: %v", err)
+					log.Printf("Error occurred when creating user in database | Reason: %v\n", err)
 					context.AbortWithStatus(http.StatusInternalServerError)
 					return
 				}
@@ -146,10 +148,10 @@ func extractUserInfoFromGoogleToken(code string) (*googleOauthUserInfo, error) {
 	return &userInfo, nil
 }
 
-func generateStateOauthCookie(context *gin.Context) string {
+func generateStateOauthCookie(context *gin.Context, useHttps bool) string {
 	random := make([]byte, 16)
 	rand.Read(random)
 	state := base64.URLEncoding.EncodeToString(random)
-	context.SetCookie("oauthstate", state, 0, "/", domain, false, true)
+	context.SetCookie("oauthstate", state, 0, "/", domain, useHttps, true)
 	return state
 }
