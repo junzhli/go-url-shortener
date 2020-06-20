@@ -69,6 +69,16 @@ func CreateShortenUrlHandler(domain string) gin.HandlerFunc {
 		}
 
 		// support protocols: ftp, http, https, use http as default
+		splits := strings.Split(sReq.URL, "://")
+		if len(splits) > 1 {
+			protocol := splits[0]
+			if protocol != "ftp" && protocol != "http" && protocol != "https" {
+				log.Printf("Unsupported scheme to get shorthand: %v with splits %v\n", protocol, len(splits))
+				context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
+				return
+			}
+		}
+
 		if !strings.HasPrefix(sReq.URL, "http") && !strings.HasPrefix(sReq.URL, "ftp") {
 			sReq.URL = "http://" + sReq.URL
 		}
