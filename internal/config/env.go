@@ -18,7 +18,6 @@ type Env struct {
 	DBParams                string
 	RedisHost               string
 	RedisPort               string
-	RedisUser               string
 	RedisPassword           string
 	JwtKey                  string
 	GoogleOauthClientId     string
@@ -89,11 +88,6 @@ func ReadEnv() Env {
 	if redisPort == "" {
 		log.Printf("REDIS_PORT is empty. Default as \"6379\"\n")
 		redisPort = "6379"
-	}
-
-	redisUser := os.Getenv("REDIS_USER")
-	if redisUser == "" {
-		log.Printf("REDIS_USER is empty.")
 	}
 
 	redisPass := os.Getenv("REDIS_PASSWORD")
@@ -185,7 +179,6 @@ func ReadEnv() Env {
 		DBParams:                dbParams,
 		RedisHost:               redisHost,
 		RedisPort:               redisPort,
-		RedisUser:               redisUser,
 		RedisPassword:           redisPass,
 		JwtKey:                  jwtKey,
 		GoogleOauthClientId:     googleClientId,
