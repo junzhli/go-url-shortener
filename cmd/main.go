@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	rs "github.com/go-redis/redis"
 	"log"
 	"strings"
+	"time"
+	"url-shortener/internal/cache"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
 	"url-shortener/internal/route/user/sign"
 	"url-shortener/internal/server"
+	"url-shortener/internal/service/mail"
 )
 
 func main() {
@@ -33,6 +38,17 @@ func main() {
 	}
 
 	/**
+	Caching configuration
+	*/
+	cache := cache.New(&rs.Options{
+		Addr:         fmt.Sprintf("%v:%v", env.RedisHost, env.RedisPort),
+		Password:     env.RedisPassword,
+		DB:           0,
+		ReadTimeout:  time.Minute,
+		WriteTimeout: time.Minute,
+	})
+
+	/**
 	jwtKey configuration
 	*/
 	jwtKey := []byte(env.JwtKey)
@@ -45,7 +61,34 @@ func main() {
 		ClientSecret: env.GoogleOauthClientSecret,
 	}
 
-	r := server.SetupServer(db, jwtKey, env.UseHttps, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "./internal/template", gConf) // blocking if starting with success
+	/**
+	Email service
+	*/
+	emailRequestChannel := make(chan mail.SendEmailOptions)
+	var emailSetupOptions *mail.EmailServiceOptions
+	if env.EmailServiceEnabled {
+		emailSetupOptions = &mail.EmailServiceOptions{
+			Email:    env.EmailUserName,
+			Password: env.EmailUserPassword,
+			Server:   env.EmailServerAddr,
+		}
+	}
+
+	go mail.StartEmailService(context.Background(), emailSetupOptions, emailRequestChannel)
+
+	serverOptions := server.ServerOptions{
+		Database:                 db,
+		Cache:                    cache,
+		JwtKey:                   jwtKey,
+		UseHttps:                 env.UseHttps,
+		BaseUrl:                  env.BaseUrl.String(),
+		Domain:                   strings.Split(env.BaseUrl.Host, ":")[0],
+		HtmlTemplate:             "./internal/template",
+		GoogleOauthConf:          gConf,
+		EmailVerificationIgnored: !env.EmailServiceEnabled,
+		EmailRequest:             emailRequestChannel,
+	}
+	r := server.SetupServer(serverOptions) // blocking if starting with success
 	log.Printf("Server is listening...")
 	port := fmt.Sprintf(":%v", env.Port)
 	if err := r.Run(port); err != nil {

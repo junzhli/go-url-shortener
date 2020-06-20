@@ -16,12 +16,20 @@ type Env struct {
 	DBPort                  string
 	DBName                  string
 	DBParams                string
+	RedisHost               string
+	RedisPort               string
+	RedisUser               string
+	RedisPassword           string
 	JwtKey                  string
 	GoogleOauthClientId     string
 	GoogleOauthClientSecret string
 	BaseUrl                 *url2.URL
 	Port                    string
 	UseHttps                bool
+	EmailServerAddr         string
+	EmailUserName           string
+	EmailUserPassword       string
+	EmailServiceEnabled     bool
 }
 
 func ReadEnv() Env {
@@ -30,6 +38,9 @@ func ReadEnv() Env {
 		log.Printf("Unable to read .env | Reason: %v ...skipped\n", err)
 	}
 
+	/**
+	Database
+	*/
 	dbUser := os.Getenv("DB_USER")
 	if dbUser == "" {
 		log.Printf("DB_USER is empty. Default as \"root\"\n")
@@ -65,12 +76,43 @@ func ReadEnv() Env {
 		dbParams = "charset=utf8&parseTime=True&loc=Local"
 	}
 
+	/**
+	Cache
+	*/
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		log.Printf("REDIS_HOST is empty. Default as \"localhost\"\n")
+		redisHost = "localhost"
+	}
+
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		log.Printf("REDIS_PORT is empty. Default as \"6379\"\n")
+		redisPort = "6379"
+	}
+
+	redisUser := os.Getenv("REDIS_USER")
+	if redisUser == "" {
+		log.Printf("REDIS_USER is empty.")
+	}
+
+	redisPass := os.Getenv("REDIS_PASSWORD")
+	if redisPass == "" {
+		log.Printf("REDIS_PASSWORD is empty\n")
+	}
+
+	/**
+	JWT
+	*/
 	jwtKey := os.Getenv("JWT_KEY")
 	if jwtKey == "" {
 		log.Printf("JWT_KEY is empty. Default as \"testKey\"\n")
 		jwtKey = "testKey"
 	}
 
+	/**
+	Google Oauth
+	*/
 	googleClientId := os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
 	if googleClientId == "" {
 		log.Printf("GOOGLE_OAUTH_CLIENT_ID is empty. Default as \"959723324236-0e23oe704fp1rtf3k5qc780mijahd1b3.apps.googleusercontent.com\"\n")
@@ -83,6 +125,9 @@ func ReadEnv() Env {
 		googleClientSecret = "xG1-yt61nKfvPUAfZumduCNO"
 	}
 
+	/**
+	Server
+	*/
 	port := os.Getenv("API_PORT")
 	if port == "" {
 		log.Printf("API_PORT is empty. Default as \"8080\"\n")
@@ -93,6 +138,28 @@ func ReadEnv() Env {
 	if baseUrl == "" {
 		log.Printf("BASE_URL is empty. Default as \"http://url-shortener.com:%v\"\n", port)
 		baseUrl = fmt.Sprintf("http://url-shortener.com:%v", port)
+	}
+
+	/**
+	Email
+	*/
+	emailServerAddr := os.Getenv("EMAIL_SERVER_ADDR")
+	emailServiceActive := true
+	if emailServerAddr == "" {
+		log.Printf("EMAIL_SERVER_ADDR is empty. This will disable email functionality\n")
+		emailServiceActive = false
+	}
+	emailUsername := ""
+	emailPassword := ""
+	if emailServiceActive {
+		emailUsername = os.Getenv("EMAIL_USERNAME")
+		if emailUsername == "" {
+			log.Printf("EMAIL_USERNAME is empty\n")
+		}
+		emailPassword = os.Getenv("EMAIL_PASSWORD")
+		if emailPassword == "" {
+			log.Printf("EMAIL_PASSWORD is empty\n")
+		}
 	}
 
 	u, err := url2.ParseRequestURI(baseUrl)
@@ -116,12 +183,20 @@ func ReadEnv() Env {
 		DBPort:                  dbPort,
 		DBName:                  dbName,
 		DBParams:                dbParams,
+		RedisHost:               redisHost,
+		RedisPort:               redisPort,
+		RedisUser:               redisUser,
+		RedisPassword:           redisPass,
 		JwtKey:                  jwtKey,
 		GoogleOauthClientId:     googleClientId,
 		GoogleOauthClientSecret: googleClientSecret,
 		BaseUrl:                 u,
 		Port:                    port,
 		UseHttps:                useHttps,
+		EmailServerAddr:         emailServerAddr,
+		EmailUserName:           emailUsername,
+		EmailUserPassword:       emailPassword,
+		EmailServiceEnabled:     emailServiceActive,
 	}
 
 	fmt.Printf("===========================\n")

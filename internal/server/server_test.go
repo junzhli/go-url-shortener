@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	rs "github.com/go-redis/redis"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -11,6 +12,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
+	"url-shortener/internal/cache"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
 	"url-shortener/internal/route/user/sign"
@@ -60,13 +63,37 @@ var _ = Describe("Server APIs", func() {
 			log.Fatalf("Unable to set up database | Reason: %v\n", err)
 		}
 		db = _db
+
+		/**
+		Caching configuration
+		*/
+		cache := cache.New(&rs.Options{
+			Addr:         fmt.Sprintf("%v:%v", env.RedisHost, env.RedisPort),
+			Password:     env.RedisPassword,
+			DB:           0,
+			ReadTimeout:  time.Minute,
+			WriteTimeout: time.Minute,
+		})
+
 		jwtKey := []byte(env.JwtKey)
 		gConf := sign.GoogleOauthConfig{
 			ClientId:     env.GoogleOauthClientId,
 			ClientSecret: env.GoogleOauthClientSecret,
 		}
 
-		router = server.SetupServer(db, jwtKey, env.UseHttps, env.BaseUrl.String(), strings.Split(env.BaseUrl.Host, ":")[0], "../template", gConf)
+		serverOptions := server.ServerOptions{
+			Database:                 db,
+			Cache:                    cache,
+			JwtKey:                   jwtKey,
+			UseHttps:                 env.UseHttps,
+			BaseUrl:                  env.BaseUrl.String(),
+			Domain:                   strings.Split(env.BaseUrl.Host, ":")[0],
+			HtmlTemplate:             "../template",
+			GoogleOauthConf:          gConf,
+			EmailVerificationIgnored: true,
+			EmailRequest:             nil,
+		}
+		router = server.SetupServer(serverOptions)
 	})
 
 	Context("Sign up with local account", func() {
@@ -79,6 +106,17 @@ var _ = Describe("Server APIs", func() {
 			`, user1.Email, user1.Password)
 			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest("POST", "/api/user/signup", strings.NewReader(payload))
+			router.ServeHTTP(recorder, req)
+			Expect(recorder.Code).To(Or(Equal(http.StatusOK), Equal(http.StatusBadRequest)))
+
+			payload = fmt.Sprintf(`
+			{
+				"email": "%v",
+				"code": "123456"
+			}
+			`, user1.Email)
+			recorder = httptest.NewRecorder()
+			req = httptest.NewRequest("POST", "/api/user/signup/complete", strings.NewReader(payload))
 			router.ServeHTTP(recorder, req)
 			Expect(recorder.Code).To(Or(Equal(http.StatusOK), Equal(http.StatusBadRequest)))
 		})
