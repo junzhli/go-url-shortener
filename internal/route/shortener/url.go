@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	url2 "net/url"
+	"strings"
 	"time"
 	"url-shortener/internal/database"
 	server "url-shortener/internal/route/error"
@@ -66,13 +67,19 @@ func CreateShortenUrlHandler(domain string) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 			return
 		}
+
+		// support protocols: ftp, http, https, use http as default
+		if !strings.HasPrefix(sReq.URL, "http") && !strings.HasPrefix(sReq.URL, "ftp") {
+			sReq.URL = "http://" + sReq.URL
+		}
+
 		u, err := url2.Parse(sReq.URL)
 		if err != nil {
 			log.Printf("Invalid url to get shorthand")
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 			return
 		}
-		if u.Scheme != "http" && u.Scheme != "https" {
+		if u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "ftp" {
 			log.Printf("Invalid scheme to get shorthand")
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 			return
