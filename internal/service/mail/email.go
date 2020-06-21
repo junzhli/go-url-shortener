@@ -48,46 +48,47 @@ func StartEmailService(ctx context.Context, c *EmailServiceOptions, incoming <-c
 		logMessage("Awaiting another incoming request for sending email...")
 
 		req := <-incoming
+		go func(req SendEmailOptions) {
+			logMessage("=== Requested ===")
+			logMessage(fmt.Sprintf("Recipient: %v", req.To))
+			logMessage(fmt.Sprintf("Content: %v", req.Message))
+			logMessage("=================")
 
-		logMessage("=== Requested ===")
-		logMessage(fmt.Sprintf("Recipient: %v", req.To))
-		logMessage(fmt.Sprintf("Content: %v", req.Message))
-		logMessage("=================")
+			_ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+			done := make(chan bool)
 
-		_ctx, cancel := context.WithTimeout(ctx, time.Second*30)
-		done := make(chan bool)
+			go func(isDone chan<- bool) {
+				defer cancel()
 
-		go func(isDone chan<- bool) {
-			defer cancel()
+				err := smtp.SendMail(c.Server, auth, c.Email, []string{req.To}, req.toBodyBytes())
+				if err != nil {
+					logMessage(fmt.Sprintf("Sending email failed | Reason: %v", err))
+					isDone <- false
+				}
+				isDone <- true
+			}(done)
 
-			err := smtp.SendMail(c.Server, auth, c.Email, []string{req.To}, req.toBodyBytes())
-			if err != nil {
-				logMessage(fmt.Sprintf("Sending email failed | Reason: %v", err))
-				isDone <- false
-			}
-			isDone <- true
-		}(done)
+			completed := false
 
-		completed := false
+			for {
+				select {
+				case isDone := <-done:
+					if isDone {
+						logMessage("Sending email succeed")
+					}
 
-		for {
-			select {
-			case isDone := <-done:
-				if isDone {
-					logMessage("Sending email succeed")
+					completed = true
+				case <-_ctx.Done():
+					logMessage("Sending email timed out")
+
+					completed = true
+				default:
 				}
 
-				completed = true
-			case <-_ctx.Done():
-				logMessage("Sending email timed out")
-
-				completed = true
-			default:
+				if completed {
+					break
+				}
 			}
-
-			if completed {
-				break
-			}
-		}
+		}(req)
 	}
 }

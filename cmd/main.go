@@ -64,7 +64,7 @@ func main() {
 	/**
 	Email service
 	*/
-	emailRequestChannel := make(chan mail.SendEmailOptions)
+	emailRequestChannel := make(chan mail.SendEmailOptions, 20)
 	var emailSetupOptions *mail.EmailServiceOptions
 	if env.EmailServiceEnabled {
 		emailSetupOptions = &mail.EmailServiceOptions{

@@ -34,7 +34,7 @@ func GetShortenUrlsHandler(context *gin.Context) {
 		log.Printf("Unable to decode query parameter limit: %v | Reason: %v\n", paramLimit, err)
 		context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.RequestError))
 	}
-	if limit < 1 {
+	if limit < 1 || limit > 100 {
 		limit = 100
 	}
 
