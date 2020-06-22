@@ -152,7 +152,7 @@ func generateStateOauthCookie(context *gin.Context, useHttps bool) string {
 	random := make([]byte, 16)
 	rand.Read(random)
 	state := base64.URLEncoding.EncodeToString(random)
-	context.SetSameSite(http.SameSiteStrictMode)
+	context.SetSameSite(http.SameSiteLaxMode)
 	context.SetCookie("oauthstate", state, 0, "/", domain, useHttps, true)
 	return state
 }
