@@ -26,14 +26,14 @@ type MySQLService interface {
  */
 type gormUser struct {
 	UserID    string `gorm:"primary_key"`
-	Email     string
+	Email     string `gorm:"unique;not null"`
 	Type      string
 	Password  string
 	UpdatedAt time.Time
 }
 
 type gormGoogleUser struct {
-	UserID     string
+	UserID     string `gorm:"unique;not null"`
 	GoogleUUID string `gorm:"primary_key"`
 	UpdatedAt  time.Time
 }

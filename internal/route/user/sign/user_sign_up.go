@@ -135,7 +135,13 @@ func UserSignUpHandler(emailRequest chan<- mail.SendEmailOptions, emailVerificat
 
 		db := context.Value("db").(database.MySQLService)
 		_, err = db.GetUserWithEmail(strings.ToLower(auth.Email))
-		if err == nil {
+		if err != nil {
+			if _, ok := err.(database.RecordNotFoundError); !ok {
+				log.Printf("Unable to query for user info in database | Reason: %v\n", err)
+				context.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+		} else {
 			log.Printf("This user is registered in database\n")
 			context.AbortWithStatusJSON(http.StatusBadRequest, server.NewResponseErrorWithMessage(server.AlreadyRegisteredError))
 			return
