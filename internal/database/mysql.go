@@ -19,6 +19,7 @@ type MySQLService interface {
 	GetURLsWithUser(user User, offset uint64, limit uint64) (uint64, []URL, error)
 	DeleteURL(shortenURL string) error
 	DeleteUser(user User) error
+	Close() error
 }
 
 /**
@@ -78,6 +79,10 @@ func (g *gormService) Init() {
 		g.db.CreateTable(&gormURL{})
 		g.db.Model(&gormURL{}).AddIndex("idx_shorten_url", "shorten_url")
 	}
+}
+
+func (g *gormService) Close() error {
+	return g.db.Close()
 }
 
 func (g *gormService) CreateUser(user User) error {

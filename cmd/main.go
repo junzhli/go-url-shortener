@@ -5,7 +5,10 @@ import (
 	"fmt"
 	rs "github.com/go-redis/redis"
 	"log"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 	"url-shortener/internal/cache"
 	"url-shortener/internal/config"
@@ -36,6 +39,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to set up database | Reason: %v\n", err)
 	}
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Warning: unable to close mysql connection properly | Reason: %v\n", err)
+		}
+	}()
 
 	/**
 	Caching configuration
@@ -47,6 +55,11 @@ func main() {
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 	})
+	defer func() {
+		if err := cache.Close(); err != nil {
+			log.Printf("Warning: unable to close redis connection properly | Reason: %v\n", err)
+		}
+	}()
 
 	/**
 	jwtKey configuration
@@ -88,10 +101,28 @@ func main() {
 		EmailVerificationIgnored: !env.EmailServiceEnabled,
 		EmailRequest:             emailRequestChannel,
 	}
-	r := server.SetupServer(serverOptions) // blocking if starting with success
-	log.Printf("Server is listening...")
-	port := fmt.Sprintf(":%v", env.Port)
-	if err := r.Run(port); err != nil {
-		log.Fatalf("Unable to start server: %v\n", err)
+
+	serverErr := make(chan error) // return true indicates something is wrong
+	go func(serverErr chan<- error) {
+		r := server.SetupServer(serverOptions)
+		log.Printf("Server is listening...")
+		port := fmt.Sprintf(":%v", env.Port)
+		if err := r.Run(port); err != nil {
+			serverErr <- err
+		}
+	}(serverErr)
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	terminated := false
+	for !terminated {
+		select {
+		case <-done:
+			log.Printf("Gracefully shutting down...\n")
+			terminated = true
+		case err := <-serverErr:
+			log.Fatalf("Unable to start server: %v\n", err)
+		default:
+		}
 	}
 }
