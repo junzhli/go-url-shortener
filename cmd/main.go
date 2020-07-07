@@ -54,6 +54,7 @@ func main() {
 		DB:           0,
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
+		IdleTimeout:  250 * time.Second,
 	})
 	defer func() {
 		if err := cache.Close(); err != nil {
