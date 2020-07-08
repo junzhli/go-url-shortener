@@ -10,13 +10,22 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"url-shortener/internal/cache"
+	ch "url-shortener/internal/cache"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
 	"url-shortener/internal/route/user/sign"
 	"url-shortener/internal/server"
 	"url-shortener/internal/service/mail"
 )
+
+func periodicallyCheckRedis(r ch.Redis, err chan error) {
+	for {
+		if e := r.Ping(); e != nil {
+			err <- e
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
 
 func main() {
 	// TODO: connect to database at startup
@@ -48,14 +57,17 @@ func main() {
 	/**
 	Caching configuration
 	*/
-	cache := cache.New(&rs.Options{
+	cache := ch.New(&rs.Options{
 		Addr:         fmt.Sprintf("%v:%v", env.RedisHost, env.RedisPort),
 		Password:     env.RedisPassword,
 		DB:           0,
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 		IdleTimeout:  250 * time.Second,
+		MinIdleConns: 1,
 	})
+	redisErr := make(chan error) // return true indicates something is wrong
+	go periodicallyCheckRedis(cache, redisErr)
 	defer func() {
 		if err := cache.Close(); err != nil {
 			log.Printf("Warning: unable to close redis connection properly | Reason: %v\n", err)
@@ -123,6 +135,8 @@ func main() {
 			terminated = true
 		case err := <-serverErr:
 			log.Fatalf("Unable to start server: %v\n", err)
+		case err := <-redisErr:
+			log.Fatalf("Connection check with redis failed: %v\n", err)
 		default:
 		}
 	}
