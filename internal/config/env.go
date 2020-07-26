@@ -7,6 +7,7 @@ import (
 	url2 "net/url"
 	"os"
 	"reflect"
+	"regexp"
 )
 
 type Env struct {
@@ -78,21 +79,31 @@ func ReadEnv() Env {
 	/**
 	Cache
 	*/
-	redisHost := os.Getenv("REDIS_HOST")
-	if redisHost == "" {
-		log.Printf("REDIS_HOST is empty. Default as \"localhost\"\n")
-		redisHost = "localhost"
-	}
+	isHerokuRedis, herokuRedisConf := getRedisHeroku()
+	var redisHost, redisPort, redisPass string
 
-	redisPort := os.Getenv("REDIS_PORT")
-	if redisPort == "" {
-		log.Printf("REDIS_PORT is empty. Default as \"6379\"\n")
-		redisPort = "6379"
-	}
+	if isHerokuRedis {
+		log.Println("HerokuRedis detected")
+		redisHost = herokuRedisConf.Host
+		redisPort = herokuRedisConf.Port
+		redisPass = herokuRedisConf.Password
+	} else {
+		redisHost = os.Getenv("REDIS_HOST")
+		if redisHost == "" {
+			log.Printf("REDIS_HOST is empty. Default as \"localhost\"\n")
+			redisHost = "localhost"
+		}
 
-	redisPass := os.Getenv("REDIS_PASSWORD")
-	if redisPass == "" {
-		log.Printf("REDIS_PASSWORD is empty\n")
+		redisPort = os.Getenv("REDIS_PORT")
+		if redisPort == "" {
+			log.Printf("REDIS_PORT is empty. Default as \"6379\"\n")
+			redisPort = "6379"
+		}
+
+		redisPass = os.Getenv("REDIS_PASSWORD")
+		if redisPass == "" {
+			log.Printf("REDIS_PASSWORD is empty\n")
+		}
 	}
 
 	/**
@@ -200,4 +211,48 @@ func ReadEnv() Env {
 	fmt.Printf("===========================\n")
 
 	return env
+}
+
+type RedisHerokuConf struct {
+	Password string
+	Host     string
+	Port     string
+}
+
+func getRedisHeroku() (bool, RedisHerokuConf) {
+	key := "REDIS_URL"
+
+	var s string
+	if s = os.Getenv(key); s == "" {
+		return false, RedisHerokuConf{}
+	}
+
+	reg, err := regexp.Compile(`redis:\\/\\/h:(.*)@(.*):(\\d*)`)
+	if err != nil {
+		log.Fatalf("[getRedisHeroku] Invalid regex expression - %s\n", err)
+	}
+	matches := reg.FindStringSubmatch(s)
+
+	redisHost := matches[1]
+	if redisHost == "" {
+		log.Printf("[getRedisHeroku] %s - HOST is empty. Default as \"localhost\"\n", key)
+		redisHost = "localhost"
+	}
+
+	redisPort := matches[2]
+	if redisPort == "" {
+		log.Printf("[getRedisHeroku] %s - PORT is empty. Default as \"6379\"\n", key)
+		redisPort = "6379"
+	}
+
+	redisPass := matches[0]
+	if redisPass == "" {
+		log.Printf("[getRedisHeroku] %s - PASSWORD is empty\n", key)
+	}
+
+	return true, RedisHerokuConf{
+		Host:     redisHost,
+		Port:     redisPort,
+		Password: redisPass,
+	}
 }
