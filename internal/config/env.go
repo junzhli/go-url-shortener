@@ -227,25 +227,25 @@ func getRedisHeroku() (bool, RedisHerokuConf) {
 		return false, RedisHerokuConf{}
 	}
 
-	reg, err := regexp.Compile(`redis:\\/\\/h:(.*)@(.*):(\\d*)`)
-	if err != nil {
-		log.Fatalf("[getRedisHeroku] Invalid regex expression - %s\n", err)
-	}
+	reg := regexp.MustCompile("redis:\\/\\/h:(.*)@(.*):(\\d*)")
 	matches := reg.FindStringSubmatch(s)
+	if len(matches) < 4 {
+		return false, RedisHerokuConf{}
+	}
 
-	redisHost := matches[1]
+	redisHost := matches[2]
 	if redisHost == "" {
 		log.Printf("[getRedisHeroku] %s - HOST is empty. Default as \"localhost\"\n", key)
 		redisHost = "localhost"
 	}
 
-	redisPort := matches[2]
+	redisPort := matches[3]
 	if redisPort == "" {
 		log.Printf("[getRedisHeroku] %s - PORT is empty. Default as \"6379\"\n", key)
 		redisPort = "6379"
 	}
 
-	redisPass := matches[0]
+	redisPass := matches[1]
 	if redisPass == "" {
 		log.Printf("[getRedisHeroku] %s - PASSWORD is empty\n", key)
 	}
