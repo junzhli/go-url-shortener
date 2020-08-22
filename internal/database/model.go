@@ -21,4 +21,5 @@ type URL struct {
 	OriginURL  string
 	Owner      string
 	ShortenURL string
+	Count      int64
 }

@@ -11,6 +11,7 @@ type Redis interface {
 	Get(key string) (string, error)
 	Del(key string) error
 	Set(key string, value interface{}, expiration time.Duration) error
+	Increment(key string) (int64, error)
 	NewTx() rs.Pipeliner
 	Ping() error
 	Close() error
@@ -43,6 +44,10 @@ func (r *redis) NewTx() rs.Pipeliner {
 func (r *redis) Ping() error {
 	_, err := r.client.Ping().Result()
 	return err
+}
+
+func (r *redis) Increment(key string) (int64, error) {
+	return r.client.Incr(key).Result()
 }
 
 // New creates an instance of Redis

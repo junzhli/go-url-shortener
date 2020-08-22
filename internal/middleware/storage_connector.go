@@ -16,6 +16,7 @@ func GetDatabaseConnector(service database.MySQLService) gin.HandlerFunc {
 func GetCacheConnector(service cache.Redis) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		context.Set("cache", service)
+		context.Set("cache-service", cache.NewService(service))
 		context.Next()
 	}
 }

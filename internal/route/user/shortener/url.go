@@ -17,6 +17,7 @@ type URLsResponse struct {
 type URLResponse struct {
 	OriginURL  string `json:"origin_url"`
 	ShortenURL string `json:"shorten_url"`
+	Hits       int64  `json:"hits"`
 }
 
 func GetShortenUrlsHandler(context *gin.Context) {
@@ -57,6 +58,7 @@ func GetShortenUrlsHandler(context *gin.Context) {
 		resUrls[i] = URLResponse{
 			OriginURL:  url.OriginURL,
 			ShortenURL: url.ShortenURL,
+			Hits:       url.Count,
 		}
 	}
 

@@ -16,6 +16,7 @@ type MySQLService interface {
 	GetURLIfExistsWithUser(user User, oriURL string) (*URL, error)
 	CreateURL(oriURL string, shortenURL string, user User) error
 	GetURLWithShortenURL(shortenURL string) (*URL, error)
+	UpdateURL(url *URL) error
 	GetURLsWithUser(user User, offset uint64, limit uint64) (uint64, []URL, error)
 	DeleteURL(shortenURL string) error
 	DeleteUser(user User) error
@@ -43,6 +44,7 @@ type gormURL struct {
 	OriginURL  string
 	Owner      string
 	ShortenURL string `gorm:"primary_key"`
+	Count      int64
 	UpdatedAt  time.Time
 }
 
@@ -50,7 +52,7 @@ type gormService struct {
 	db *gorm.DB
 }
 
-func newGormSerice(user string, password string, host string, port string, dbName string, dbParams string) (*gormService, error) {
+func newGormService(user string, password string, host string, port string, dbName string, dbParams string) (*gormService, error) {
 	connectStr := fmt.Sprintf("%v:%v@(%v:%v)/%v?%v", user, password, host, port, dbName, dbParams)
 	db, err := gorm.Open("mysql", connectStr)
 	if err != nil {
@@ -207,7 +209,34 @@ func (g *gormService) GetURLWithShortenURL(shortenURL string) (*URL, error) {
 		OriginURL:  gormURL.OriginURL,
 		Owner:      gormURL.Owner,
 		ShortenURL: gormURL.ShortenURL,
+		Count:      gormURL.Count,
 	}, nil
+}
+
+func (g *gormService) UpdateURL(url *URL) error {
+	var gormURL gormURL
+	execute := g.db.Where("shorten_url = ?", url.ShortenURL).First(&gormURL)
+
+	if execute.RecordNotFound() {
+		return NewRecordNotFoundError()
+	}
+
+	if err := execute.Error; err != nil {
+		return err
+	}
+
+	// note: only available for current use cases
+	//gormURL.ShortenURL = url.ShortenURL
+	gormURL.Count = url.Count
+	//gormURL.OriginURL = url.OriginURL
+	//gormURL.Owner = url.Owner
+
+	execute2 := g.db.Save(&gormURL)
+	if err := execute2.Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (g *gormService) GetURLsWithUser(user User, offset uint64, limit uint64) (uint64, []URL, error) {
@@ -230,6 +259,7 @@ func (g *gormService) GetURLsWithUser(user User, offset uint64, limit uint64) (u
 			OriginURL:  url.OriginURL,
 			Owner:      url.Owner,
 			ShortenURL: url.ShortenURL,
+			Count:      url.Count,
 		}
 	}
 
@@ -317,7 +347,7 @@ func NewMySQLDatabase(c Config) (MySQLService, error) {
 		dbParams = c.DBParams
 	}
 
-	g, err := newGormSerice(user, pass, host, port, dbName, dbParams)
+	g, err := newGormService(user, pass, host, port, dbName, dbParams)
 	if err != nil {
 		log.Printf("Unable to create an instance of Gorm")
 		return nil, err

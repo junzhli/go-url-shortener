@@ -124,6 +124,18 @@ var _ = Describe("GormService (default impl of MySQLService)", func() {
 		})
 	})
 
+	Describe("Update shorten url info (e.g. update count)", func() {
+		It("should update successfully", func() {
+			_url1, err := db.GetURLWithShortenURL(url1S)
+			var updatedCount int64 = 1500
+			_url1.Count = updatedCount
+			err = db.UpdateURL(_url1)
+			Expect(err).NotTo(HaveOccurred())
+			_url1, err = db.GetURLWithShortenURL(url1S)
+			Expect(_url1.Count).To(Equal(updatedCount))
+		})
+	})
+
 	Describe("Get record if exists", func() {
 		It("should not exist", func() {
 			_, err := db.GetURLIfExistsWithUser(user1, url4)

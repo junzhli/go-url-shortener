@@ -16,6 +16,7 @@ import (
 	"url-shortener/internal/cache"
 	"url-shortener/internal/config"
 	"url-shortener/internal/database"
+	"url-shortener/internal/route/user/shortener"
 	"url-shortener/internal/route/user/sign"
 	"url-shortener/internal/server"
 )
@@ -270,7 +271,7 @@ var _ = Describe("Server APIs", func() {
 			recorder := httptest.NewRecorder()
 			req := httptest.NewRequest("GET", fmt.Sprintf("/api/shortener/r/%v", user1ShortenUrl), nil)
 			router.ServeHTTP(recorder, req)
-			Expect(recorder.Code).To(Equal(http.StatusMovedPermanently))
+			Expect(recorder.Code).To(Equal(http.StatusTemporaryRedirect))
 			redirectUrl := recorder.Header().Get("Location")
 			Expect(redirectUrl).To(Equal(user1Url))
 		})
@@ -290,6 +291,15 @@ var _ = Describe("Server APIs", func() {
 			req.Header.Set("Cookie", user1AccessTokenHeader)
 			router.ServeHTTP(recorder, req)
 			Expect(recorder.Code).To(Equal(http.StatusOK))
+			var resp shortener.URLsResponse
+			err := getJSON(recorder.Result(), &resp)
+			Expect(err).NotTo(HaveOccurred())
+			time.Sleep(5 * time.Second)
+			for _, url := range resp.URLs {
+				if url.OriginURL == user1Url {
+					Expect(url.Hits).To(Equal(int64(1))) // 1 hits by previous testing
+				}
+			}
 		})
 
 		It("should reject due to authorized problem", func() {
@@ -349,3 +359,7 @@ var _ = Describe("Server APIs", func() {
 	})
 
 })
+
+func getJSON(response *http.Response, target interface{}) error {
+	return json.NewDecoder(response.Body).Decode(target)
+}

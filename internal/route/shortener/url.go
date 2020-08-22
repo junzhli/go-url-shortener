@@ -37,7 +37,17 @@ func GetShortenUrlHandler(context *gin.Context) {
 		return
 	}
 
-	context.Redirect(http.StatusMovedPermanently, url.OriginURL)
+	context.Redirect(http.StatusTemporaryRedirect, url.OriginURL)
+
+	go updateURLCount(url, db)
+}
+
+func updateURLCount(url *database.URL, db database.MySQLService) {
+	url.Count++
+	err := db.UpdateURL(url)
+	if err != nil {
+		log.Printf("Failed to update count for url: %v\n", url.ShortenURL)
+	}
 }
 
 func CreateShortenUrlHandler(domain string) gin.HandlerFunc {
