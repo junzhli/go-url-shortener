@@ -220,7 +220,7 @@ type RedisHerokuConf struct {
 }
 
 func getRedisHeroku() (bool, RedisHerokuConf) {
-	key := "REDIS_URL"
+	key := "REDISCLOUD_URL"
 
 	var s string
 	if s = os.Getenv(key); s == "" {
